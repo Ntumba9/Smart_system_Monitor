@@ -1,7 +1,7 @@
 # Smart_system_Monitor
 Smart System Monitor is a hybrid system monitoring platform that collects low-level performance metrics, applies automation rules, and visualizes real-time insights through a web-based dashboard. It is designed to demonstrate strong systems thinking, performance awareness, and clean multi-layer architecture.
 
-Tech Stack & Architecture
+# Tech Stack & Architecture
 
 C – High-performance system agent for collecting CPU, memory, disk, and network metrics
 
@@ -25,11 +25,9 @@ Web dashboard with live updates
 
 Modular, scalable architecture
 
-Project Structure
+# Project Structure
 SmartSystemMonitor/
-
 backend/
-
 c_agent/ – Low-level system metrics collector (C)
 
 python_automation/ – Automation rules, logging, and data processing (Python)
