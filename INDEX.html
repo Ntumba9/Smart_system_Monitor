@@ -1,0 +1,1812 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Monitor · Intelligent Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@300;400;500;600;700&family=SF+Pro+Text:wght@300;400;500&family=SF+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --system-gray: #8E8E93;
+            --system-gray-light: #C7C7CC;
+            --system-gray-lighter: #F2F2F7;
+            --system-blue: #007AFF;
+            --system-blue-light: #5AC8FA;
+            --system-green: #34C759;
+            --system-orange: #FF9500;
+            --system-red: #FF3B30;
+            --system-purple: #AF52DE;
+            --system-indigo: #5856D6;
+            --system-teal: #5AC8FA;
+            
+            --bg-primary: #FFFFFF;
+            --bg-secondary: #F2F2F7;
+            --bg-tertiary: #FFFFFF;
+            --bg-card: #FFFFFF;
+            --bg-card-hover: #F8F8FA;
+            
+            --text-primary: #000000;
+            --text-secondary: #8E8E93;
+            --text-tertiary: #C7C7CC;
+            
+            --border-color: #E5E5EA;
+            --border-color-light: #F2F2F7;
+            
+            --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04);
+            --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.08);
+            
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 18px;
+            --radius-full: 28px;
+            
+            --spacing-xs: 4px;
+            --spacing-sm: 8px;
+            --spacing-md: 16px;
+            --spacing-lg: 24px;
+            --spacing-xl: 32px;
+            --spacing-xxl: 48px;
+            
+            --transition-smooth: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            --transition-bounce: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .dark-mode {
+            --bg-primary: #000000;
+            --bg-secondary: #1C1C1E;
+            --bg-tertiary: #2C2C2E;
+            --bg-card: #1C1C1E;
+            --bg-card-hover: #2C2C2E;
+            
+            --text-primary: #FFFFFF;
+            --text-secondary: #8E8E93;
+            --text-tertiary: #48484A;
+            
+            --border-color: #38383A;
+            --border-color-light: #2C2C2E;
+            
+            --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.2);
+            --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.25);
+            --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.3);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        body {
+            font-family: 'SF Pro Text', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.5;
+            font-weight: 400;
+            transition: var(--transition-smooth);
+            overflow-x: hidden;
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
+            font-weight: 600;
+            letter-spacing: -0.02em;
+        }
+
+        .mono {
+            font-family: 'SF Mono', 'Monaco', 'Menlo', monospace;
+            font-weight: 400;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 var(--spacing-lg);
+        }
+
+        /* Navigation */
+        .nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background-color: var(--bg-primary);
+            border-bottom: 1px solid var(--border-color);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+        }
+
+        .nav-container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 var(--spacing-lg);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            text-decoration: none;
+            color: var(--text-primary);
+        }
+
+        .logo {
+            width: 28px;
+            height: 28px;
+            background: linear-gradient(135deg, var(--system-blue) 0%, var(--system-teal) 100%);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .brand-name {
+            font-size: 20px;
+            font-weight: 700;
+            letter-spacing: -0.03em;
+        }
+
+        .brand-subtitle {
+            font-size: 11px;
+            color: var(--system-gray);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-top: -2px;
+        }
+
+        .nav-controls {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
+        }
+
+        .system-status {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            background-color: rgba(52, 199, 89, 0.1);
+            border-radius: var(--radius-full);
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--system-green);
+            transition: var(--transition-smooth);
+        }
+
+        .system-status.alert {
+            background-color: rgba(255, 59, 48, 0.1);
+            color: var(--system-red);
+        }
+
+        .system-status.warning {
+            background-color: rgba(255, 149, 0, 0.1);
+            color: var(--system-orange);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: currentColor;
+        }
+
+        .theme-toggle {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: var(--transition-smooth);
+        }
+
+        .theme-toggle:hover {
+            background-color: var(--bg-card-hover);
+            transform: scale(1.05);
+        }
+
+        /* Main Layout */
+        .main {
+            padding-top: 80px;
+            padding-bottom: var(--spacing-xxl);
+        }
+
+        /* Hero Section */
+        .hero {
+            margin-bottom: var(--spacing-xl);
+            padding: var(--spacing-xl) 0;
+        }
+
+        .hero-title {
+            font-size: 42px;
+            font-weight: 700;
+            letter-spacing: -0.04em;
+            line-height: 1.1;
+            margin-bottom: var(--spacing-sm);
+            background: linear-gradient(135deg, var(--text-primary) 0%, var(--text-secondary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-subtitle {
+            font-size: 20px;
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin-bottom: var(--spacing-lg);
+            font-weight: 400;
+            line-height: 1.4;
+        }
+
+        /* Metric Cards */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: var(--spacing-md);
+            margin-bottom: var(--spacing-xl);
+        }
+
+        .metric-card {
+            background-color: var(--bg-card);
+            border-radius: var(--radius-md);
+            padding: var(--spacing-lg);
+            border: 1px solid var(--border-color);
+            transition: var(--transition-smooth);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .metric-card:hover {
+            border-color: var(--system-blue-light);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .metric-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: linear-gradient(to bottom, var(--system-blue), var(--system-teal));
+            border-radius: var(--radius-md) 0 0 var(--radius-md);
+        }
+
+        .metric-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: var(--spacing-md);
+        }
+
+        .metric-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
+        .metric-value {
+            font-size: 36px;
+            font-weight: 700;
+            letter-spacing: -0.03em;
+            line-height: 1;
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .metric-trend {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-xs);
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--system-green);
+        }
+
+        .metric-trend.negative {
+            color: var(--system-red);
+        }
+
+        .metric-progress {
+            height: 4px;
+            background-color: var(--border-color-light);
+            border-radius: 2px;
+            margin-top: var(--spacing-md);
+            overflow: hidden;
+        }
+
+        .metric-progress-bar {
+            height: 100%;
+            border-radius: 2px;
+            transition: width 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .progress-cpu {
+            background: linear-gradient(90deg, var(--system-blue), var(--system-teal));
+        }
+
+        .progress-memory {
+            background: linear-gradient(90deg, var(--system-purple), var(--system-indigo));
+        }
+
+        .progress-disk {
+            background: linear-gradient(90deg, var(--system-green), #30D158);
+        }
+
+        .progress-network {
+            background: linear-gradient(90deg, var(--system-orange), #FFD60A);
+        }
+
+        /* Charts */
+        .charts-section {
+            margin-bottom: var(--spacing-xl);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .section-title {
+            font-size: 28px;
+            font-weight: 700;
+            letter-spacing: -0.03em;
+        }
+
+        .section-subtitle {
+            font-size: 16px;
+            color: var(--text-secondary);
+            font-weight: 400;
+        }
+
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: var(--spacing-md);
+        }
+
+        .chart-card {
+            background-color: var(--bg-card);
+            border-radius: var(--radius-md);
+            padding: var(--spacing-lg);
+            border: 1px solid var(--border-color);
+            transition: var(--transition-smooth);
+        }
+
+        .chart-card:hover {
+            border-color: var(--system-blue-light);
+            box-shadow: var(--shadow-md);
+        }
+
+        .chart-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: var(--spacing-md);
+            color: var(--text-primary);
+        }
+
+        .chart-container {
+            height: 200px;
+            position: relative;
+        }
+
+        /* Automation Section */
+        .automation-section {
+            margin-bottom: var(--spacing-xl);
+        }
+
+        .automation-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: var(--spacing-md);
+        }
+
+        @media (max-width: 992px) {
+            .automation-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .rules-container {
+            background-color: var(--bg-card);
+            border-radius: var(--radius-md);
+            padding: var(--spacing-lg);
+            border: 1px solid var(--border-color);
+        }
+
+        .rules-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .rules-title {
+            font-size: 20px;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+
+        .rule-item {
+            padding: var(--spacing-md);
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border-color);
+            margin-bottom: var(--spacing-sm);
+            transition: var(--transition-smooth);
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
+        }
+
+        .rule-item:hover {
+            border-color: var(--system-blue);
+            background-color: var(--bg-card-hover);
+        }
+
+        .rule-item.active {
+            border-left: 4px solid var(--system-green);
+        }
+
+        .rule-item.triggered {
+            border-left: 4px solid var(--system-red);
+            animation: gentlePulse 2s infinite;
+        }
+
+        @keyframes gentlePulse {
+            0% { box-shadow: 0 0 0 0 rgba(255, 59, 48, 0.1); }
+            70% { box-shadow: 0 0 0 6px rgba(255, 59, 48, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 59, 48, 0); }
+        }
+
+        .rule-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: var(--radius-sm);
+            background-color: rgba(0, 122, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--system-blue);
+            flex-shrink: 0;
+        }
+
+        .rule-content {
+            flex: 1;
+        }
+
+        .rule-name {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+
+        .rule-condition {
+            font-size: 13px;
+            color: var(--text-secondary);
+            font-family: 'SF Mono', monospace;
+            margin-bottom: 4px;
+        }
+
+        .rule-action {
+            font-size: 14px;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .rule-status {
+            font-size: 11px;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: var(--radius-full);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+
+        .status-active {
+            background-color: rgba(52, 199, 89, 0.1);
+            color: var(--system-green);
+        }
+
+        .status-triggered {
+            background-color: rgba(255, 59, 48, 0.1);
+            color: var(--system-red);
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 10px 20px;
+            border-radius: var(--radius-full);
+            border: none;
+            font-family: 'SF Pro Text', -apple-system, sans-serif;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition-bounce);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            letter-spacing: -0.01em;
+        }
+
+        .btn-primary {
+            background-color: var(--system-blue);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #0056CC;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(0, 122, 255, 0.25);
+        }
+
+        .btn-secondary {
+            background-color: var(--bg-secondary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            background-color: var(--bg-card-hover);
+            transform: translateY(-1px);
+        }
+
+        .btn-sm {
+            padding: 6px 14px;
+            font-size: 13px;
+        }
+
+        /* Logs Section */
+        .logs-section {
+            margin-bottom: var(--spacing-xl);
+        }
+
+        .logs-container {
+            background-color: var(--bg-card);
+            border-radius: var(--radius-md);
+            padding: var(--spacing-lg);
+            border: 1px solid var(--border-color);
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .log-item {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border-color-light);
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
+            transition: var(--transition-smooth);
+        }
+
+        .log-item:hover {
+            background-color: var(--bg-card-hover);
+        }
+
+        .log-item:last-child {
+            border-bottom: none;
+        }
+
+        .log-time {
+            font-family: 'SF Mono', monospace;
+            font-size: 13px;
+            color: var(--text-secondary);
+            min-width: 60px;
+        }
+
+        .log-message {
+            flex: 1;
+            font-size: 14px;
+        }
+
+        .log-icon {
+            width: 20px;
+            text-align: center;
+            color: var(--text-tertiary);
+        }
+
+        .log-info .log-icon {
+            color: var(--system-blue);
+        }
+
+        .log-warning .log-icon {
+            color: var(--system-orange);
+        }
+
+        .log-error .log-icon {
+            color: var(--system-red);
+        }
+
+        .log-success .log-icon {
+            color: var(--system-green);
+        }
+
+        /* Architecture Section */
+        .architecture-section {
+            margin-bottom: var(--spacing-xxl);
+        }
+
+        .architecture-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: var(--spacing-md);
+        }
+
+        @media (max-width: 768px) {
+            .architecture-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .component-card {
+            background-color: var(--bg-card);
+            border-radius: var(--radius-md);
+            padding: var(--spacing-lg);
+            border: 1px solid var(--border-color);
+            transition: var(--transition-smooth);
+        }
+
+        .component-card:hover {
+            border-color: var(--system-blue-light);
+            transform: translateY(-2px);
+        }
+
+        .component-header {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
+            margin-bottom: var(--spacing-md);
+        }
+
+        .component-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        .icon-c {
+            background: linear-gradient(135deg, #5A67D8, #805AD5);
+        }
+
+        .icon-python {
+            background: linear-gradient(135deg, #3776AB, #FFD343);
+        }
+
+        .icon-java {
+            background: linear-gradient(135deg, #007396, #ED8B00);
+        }
+
+        .icon-js {
+            background: linear-gradient(135deg, #F7DF1E, #000000);
+        }
+
+        .component-title {
+            font-size: 20px;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+
+        .component-description {
+            color: var(--text-secondary);
+            line-height: 1.6;
+            margin-bottom: var(--spacing-md);
+        }
+
+        .component-features {
+            list-style: none;
+        }
+
+        .component-features li {
+            padding: 6px 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+
+        .component-features li::before {
+            content: "•";
+            color: var(--system-blue);
+            font-weight: bold;
+        }
+
+        /* Footer */
+        .footer {
+            padding: var(--spacing-xl) 0;
+            border-top: 1px solid var(--border-color);
+            text-align: center;
+        }
+
+        .footer-text {
+            color: var(--text-secondary);
+            font-size: 14px;
+            margin-bottom: var(--spacing-md);
+        }
+
+        .component-tags {
+            display: flex;
+            justify-content: center;
+            gap: var(--spacing-sm);
+            flex-wrap: wrap;
+            margin-top: var(--spacing-lg);
+        }
+
+        .tag {
+            padding: 6px 14px;
+            border-radius: var(--radius-full);
+            font-size: 12px;
+            font-weight: 500;
+            background-color: var(--bg-secondary);
+            color: var(--text-secondary);
+            border: 1px solid var(--border-color);
+        }
+
+        /* Modal */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .modal.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-content {
+            background-color: var(--bg-card);
+            border-radius: var(--radius-lg);
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: var(--spacing-xl);
+            border: 1px solid var(--border-color);
+            transform: translateY(20px);
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .modal.active .modal-content {
+            transform: translateY(0);
+        }
+
+        .modal-header {
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .modal-title {
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: -0.03em;
+            margin-bottom: 4px;
+        }
+
+        .modal-subtitle {
+            color: var(--text-secondary);
+            font-size: 15px;
+        }
+
+        .form-group {
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--text-primary);
+            font-size: 15px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 16px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border-color);
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            font-family: 'SF Pro Text', -apple-system, sans-serif;
+            font-size: 16px;
+            transition: var(--transition-smooth);
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--system-blue);
+            box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: var(--spacing-md);
+        }
+
+        /* Utility */
+        .text-gradient {
+            background: linear-gradient(135deg, var(--system-blue), var(--system-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.6s ease forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero-title {
+                font-size: 32px;
+            }
+            
+            .hero-subtitle {
+                font-size: 18px;
+            }
+            
+            .metrics-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="nav">
+        <div class="nav-container">
+            <a href="#" class="nav-brand">
+                <div class="logo">SM</div>
+                <div>
+                    <div class="brand-name">System Monitor</div>
+                    <div class="brand-subtitle">Hybrid Architecture</div>
+                </div>
+            </a>
+            <div class="nav-controls">
+                <div class="system-status" id="systemStatus">
+                    <div class="status-dot"></div>
+                    <span>All Systems Normal</span>
+                </div>
+                <button class="theme-toggle" id="themeToggle">
+                    <i class="fas fa-moon"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main container">
+        <!-- Hero Section -->
+        <section class="hero fade-in">
+            <h1 class="hero-title">Intelligent System Monitoring</h1>
+            <p class="hero-subtitle">A production-grade hybrid architecture dashboard combining C, Python, Java, and JavaScript for comprehensive system insights and automation.</p>
+        </section>
+
+        <!-- Metrics Grid -->
+        <section class="metrics-grid fade-in" style="animation-delay: 0.1s">
+            <!-- CPU Card -->
+            <div class="metric-card">
+                <div class="metric-header">
+                    <div class="metric-title">CPU Utilization</div>
+                    <div class="metric-trend">
+                        <i class="fas fa-arrow-up"></i>
+                        <span>2.4%</span>
+                    </div>
+                </div>
+                <div class="metric-value" id="cpuValue">24.8%</div>
+                <div class="metric-progress">
+                    <div class="metric-progress-bar progress-cpu" id="cpuProgress" style="width: 24.8%"></div>
+                </div>
+            </div>
+
+            <!-- Memory Card -->
+            <div class="metric-card">
+                <div class="metric-header">
+                    <div class="metric-title">Memory</div>
+                    <div class="metric-trend">
+                        <i class="fas fa-arrow-down"></i>
+                        <span>1.2%</span>
+                    </div>
+                </div>
+                <div class="metric-value" id="memoryValue">3.4/8.0 GB</div>
+                <div class="metric-progress">
+                    <div class="metric-progress-bar progress-memory" id="memoryProgress" style="width: 42.5%"></div>
+                </div>
+            </div>
+
+            <!-- Disk Card -->
+            <div class="metric-card">
+                <div class="metric-header">
+                    <div class="metric-title">Disk Storage</div>
+                    <div class="metric-trend">
+                        <i class="fas fa-arrow-up"></i>
+                        <span>0.8%</span>
+                    </div>
+                </div>
+                <div class="metric-value" id="diskValue">248/512 GB</div>
+                <div class="metric-progress">
+                    <div class="metric-progress-bar progress-disk" id="diskProgress" style="width: 48.4%"></div>
+                </div>
+            </div>
+
+            <!-- Network Card -->
+            <div class="metric-card">
+                <div class="metric-header">
+                    <div class="metric-title">Network Activity</div>
+                    <div class="metric-trend negative">
+                        <i class="fas fa-arrow-up"></i>
+                        <span>12.6%</span>
+                    </div>
+                </div>
+                <div class="metric-value" id="networkValue">124 Mbps</div>
+                <div class="metric-progress">
+                    <div class="metric-progress-bar progress-network" id="networkProgress" style="width: 62%"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Charts Section -->
+        <section class="charts-section fade-in" style="animation-delay: 0.2s">
+            <div class="section-header">
+                <div>
+                    <h2 class="section-title">Performance Trends</h2>
+                    <p class="section-subtitle">Real-time metrics from the C agent via Python processing layer</p>
+                </div>
+                <div class="btn-group">
+                    <button class="btn btn-secondary btn-sm">1H</button>
+                    <button class="btn btn-secondary btn-sm">6H</button>
+                    <button class="btn btn-primary btn-sm">24H</button>
+                </div>
+            </div>
+            
+            <div class="charts-grid">
+                <div class="chart-card">
+                    <div class="chart-title">CPU Usage History</div>
+                    <div class="chart-container">
+                        <canvas id="cpuChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="chart-card">
+                    <div class="chart-title">Memory Allocation</div>
+                    <div class="chart-container">
+                        <canvas id="memoryChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="chart-card">
+                    <div class="chart-title">Disk I/O Operations</div>
+                    <div class="chart-container">
+                        <canvas id="diskChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="chart-card">
+                    <div class="chart-title">Network Throughput</div>
+                    <div class="chart-container">
+                        <canvas id="networkChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Automation Section -->
+        <section class="automation-section fade-in" style="animation-delay: 0.3s">
+            <div class="section-header">
+                <div>
+                    <h2 class="section-title">Automation Rules</h2>
+                    <p class="section-subtitle">Python-powered logic layer for intelligent system responses</p>
+                </div>
+                <button class="btn btn-primary" id="addRuleBtn">
+                    <i class="fas fa-plus"></i>
+                    <span>New Rule</span>
+                </button>
+            </div>
+            
+            <div class="automation-grid">
+                <div class="rules-container">
+                    <div class="rules-header">
+                        <h3 class="rules-title">Active Rules</h3>
+                        <span class="mono" style="color: var(--system-green); font-size: 13px;">5 Active</span>
+                    </div>
+                    
+                    <div class="rules-list" id="rulesList">
+                        <!-- Rules populated by JavaScript -->
+                    </div>
+                </div>
+                
+                <div class="component-card">
+                    <h3 style="margin-bottom: var(--spacing-md); font-size: 18px;">Rule Statistics</h3>
+                    <div style="margin-bottom: var(--spacing-lg);">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: var(--spacing-sm);">
+                            <span style="color: var(--text-secondary);">Total Rules</span>
+                            <span style="font-weight: 600;" id="totalRules">8</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: var(--spacing-sm);">
+                            <span style="color: var(--text-secondary);">Triggered Today</span>
+                            <span style="font-weight: 600; color: var(--system-orange);" id="triggeredToday">2</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: var(--spacing-sm);">
+                            <span style="color: var(--text-secondary);">Actions Executed</span>
+                            <span style="font-weight: 600;" id="actionsExecuted">14</span>
+                        </div>
+                    </div>
+                    
+                    <h3 style="margin-bottom: var(--spacing-md); font-size: 16px;">Common Actions</h3>
+                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                        <div style="display: flex; align-items: center; gap: 8px; padding: 8px; border-radius: var(--radius-sm); background-color: var(--bg-secondary);">
+                            <i class="fas fa-bell" style="color: var(--system-orange);"></i>
+                            <span>Send Notification</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 8px; padding: 8px; border-radius: var(--radius-sm); background-color: var(--bg-secondary);">
+                            <i class="fas fa-tachometer-alt" style="color: var(--system-blue);"></i>
+                            <span>Throttle Process</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 8px; padding: 8px; border-radius: var(--radius-sm); background-color: var(--bg-secondary);">
+                            <i class="fas fa-redo" style="color: var(--system-green);"></i>
+                            <span>Restart Service</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Logs Section -->
+        <section class="logs-section fade-in" style="animation-delay: 0.4s">
+            <div class="section-header">
+                <div>
+                    <h2 class="section-title">System Logs</h2>
+                    <p class="section-subtitle">Real-time events from all architecture components</p>
+                </div>
+                <div>
+                    <button class="btn btn-secondary btn-sm" id="clearLogsBtn">
+                        <i class="fas fa-trash"></i>
+                        <span>Clear</span>
+                    </button>
+                    <button class="btn btn-secondary btn-sm" id="exportLogsBtn" style="margin-left: 8px;">
+                        <i class="fas fa-download"></i>
+                        <span>Export</span>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="logs-container" id="logsContainer">
+                <!-- Logs populated by JavaScript -->
+            </div>
+        </section>
+
+        <!-- Architecture Section -->
+        <section class="architecture-section fade-in" style="animation-delay: 0.5s">
+            <div class="section-header">
+                <div>
+                    <h2 class="section-title">Hybrid Architecture</h2>
+                    <p class="section-subtitle">Purpose-built components for maximum performance and clarity</p>
+                </div>
+            </div>
+            
+            <div class="architecture-grid">
+                <!-- C Component -->
+                <div class="component-card">
+                    <div class="component-header">
+                        <div class="component-icon icon-c">C</div>
+                        <div>
+                            <h3 class="component-title">C Agent</h3>
+                            <div style="color: var(--text-secondary); font-size: 14px;">Low-Level Collection</div>
+                        </div>
+                    </div>
+                    <p class="component-description">Efficient background daemon collecting raw system metrics via direct kernel interfaces with minimal overhead.</p>
+                    <ul class="component-features">
+                        <li>Direct syscall interfaces for maximum performance</li>
+                        <li>Shared memory IPC for zero-copy data exchange</li>
+                        <li>Sub-1% CPU overhead even under heavy load</li>
+                        <li>Real-time metric collection at 10Hz frequency</li>
+                    </ul>
+                </div>
+                
+                <!-- Python Component -->
+                <div class="component-card">
+                    <div class="component-header">
+                        <div class="component-icon icon-python">Py</div>
+                        <div>
+                            <h3 class="component-title">Python Layer</h3>
+                            <div style="color: var(--text-secondary); font-size: 14px;">Automation & Logic</div>
+                        </div>
+                    </div>
+                    <p class="component-description">Intelligent processing layer that analyzes metrics, applies rules, and triggers automated system responses.</p>
+                    <ul class="component-features">
+                        <li>Rule engine with temporal condition evaluation</li>
+                        <li>Historical data storage in SQLite database</li>
+                        <li>Plugin system for custom automation actions</li>
+                        <li>WebSocket server for real-time updates</li>
+                    </ul>
+                </div>
+                
+                <!-- Java Component -->
+                <div class="component-card">
+                    <div class="component-header">
+                        <div class="component-icon icon-java">Jv</div>
+                        <div>
+                            <h3 class="component-title">Java Controller</h3>
+                            <div style="color: var(--text-secondary); font-size: 14px;">Service Management</div>
+                        </div>
+                    </div>
+                    <p class="component-description">Central service manager providing REST API, authentication, and orchestration between system components.</p>
+                    <ul class="component-features">
+                        <li>Spring Boot REST API with OpenAPI documentation</li>
+                        <li>JWT-based authentication and rate limiting</li>
+                        <li>Service lifecycle management (start/stop/monitor)</li>
+                        <li>Configuration management and validation</li>
+                    </ul>
+                </div>
+                
+                <!-- JavaScript Component -->
+                <div class="component-card">
+                    <div class="component-header">
+                        <div class="component-icon icon-js">JS</div>
+                        <div>
+                            <h3 class="component-title">JavaScript Dashboard</h3>
+                            <div style="color: var(--text-secondary); font-size: 14px;">Visualization & Control</div>
+                        </div>
+                    </div>
+                    <p class="component-description">Elegant, responsive web interface providing real-time visualization and control over the entire monitoring system.</p>
+                    <ul class="component-features">
+                        <li>Real-time charts with smooth animations</li>
+                        <li>WebSocket integration for live updates</li>
+                        <li>Rule configuration and management interface</li>
+                        <li>Progressive Web App capabilities</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p class="footer-text">System Monitor · Hybrid Architecture Dashboard</p>
+            <p class="footer-text" style="font-size: 13px; margin-top: -4px;">Production-grade engineering showcase with clear separation of concerns</p>
+            
+            <div class="component-tags">
+                <span class="tag">C Agent</span>
+                <span class="tag">Python Automation</span>
+                <span class="tag">Java Controller</span>
+                <span class="tag">JavaScript Dashboard</span>
+                <span class="tag">REST API</span>
+                <span class="tag">WebSocket</span>
+                <span class="tag">Real-time</span>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Add Rule Modal -->
+    <div class="modal" id="addRuleModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Create Automation Rule</h2>
+                <p class="modal-subtitle">Define conditions and actions for system automation</p>
+            </div>
+            
+            <form id="ruleForm">
+                <div class="form-group">
+                    <label class="form-label" for="ruleName">Rule Name</label>
+                    <input type="text" class="form-control" id="ruleName" placeholder="High CPU Alert" required>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="metricType">Metric</label>
+                        <select class="form-control" id="metricType" required>
+                            <option value="cpu">CPU Usage</option>
+                            <option value="memory">Memory Usage</option>
+                            <option value="disk">Disk Usage</option>
+                            <option value="network">Network Activity</option>
+                            <option value="temperature">Temperature</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="condition">Condition</label>
+                        <select class="form-control" id="condition" required>
+                            <option value="greater">Greater Than</option>
+                            <option value="less">Less Than</option>
+                            <option value="equal">Equals</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="thresholdValue">Threshold</label>
+                        <input type="number" class="form-control" id="thresholdValue" placeholder="80" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="thresholdUnit">Unit</label>
+                        <select class="form-control" id="thresholdUnit" required>
+                            <option value="percent">%</option>
+                            <option value="gb">GB</option>
+                            <option value="mbps">Mbps</option>
+                            <option value="celsius">°C</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="duration">Duration (seconds)</label>
+                    <input type="number" class="form-control" id="duration" placeholder="30" value="30" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="actionType">Action</label>
+                    <select class="form-control" id="actionType" required>
+                        <option value="notification">Send Notification</option>
+                        <option value="throttle">Throttle Process</option>
+                        <option value="restart">Restart Service</option>
+                        <option value="script">Execute Script</option>
+                    </select>
+                </div>
+                
+                <div style="display: flex; gap: var(--spacing-md); margin-top: var(--spacing-xl);">
+                    <button type="button" class="btn btn-secondary" id="cancelRuleBtn" style="flex: 1;">Cancel</button>
+                    <button type="submit" class="btn btn-primary" style="flex: 1;">Create Rule</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Apple-inspired color palette
+        const colors = {
+            blue: '#007AFF',
+            green: '#34C759',
+            orange: '#FF9500',
+            red: '#FF3B30',
+            purple: '#AF52DE',
+            indigo: '#5856D6',
+            teal: '#5AC8FA'
+        };
+
+        // State
+        let currentTheme = 'light';
+        let metrics = {
+            cpu: 24.8,
+            memory: { used: 3.4, total: 8.0 },
+            disk: { used: 248, total: 512 },
+            network: { upload: 42, download: 82 },
+            processes: 87,
+            temperature: { cpu: 42, gpu: 48 }
+        };
+        
+        let rules = [
+            { id: 1, name: "High CPU Alert", condition: "CPU > 80% for 30s", action: "Send notification", status: "active", triggered: false, priority: "high" },
+            { id: 2, name: "Memory Pressure", condition: "Memory > 85% for 45s", action: "Clear cache", status: "active", triggered: true, priority: "critical" },
+            { id: 3, name: "Disk Space Warning", condition: "Disk > 90% for 60s", action: "Clean temp files", status: "active", triggered: false, priority: "medium" },
+            { id: 4, name: "Network Flood", condition: "Upload > 100 Mbps", action: "Throttle connection", status: "active", triggered: false, priority: "high" },
+            { id: 5, name: "Temperature Safety", condition: "CPU Temp > 75°C", action: "Enable fans", status: "active", triggered: false, priority: "critical" },
+            { id: 6, name: "Process Monitor", condition: "Processes > 150", action: "Kill non-essential", status: "inactive", triggered: false, priority: "medium" }
+        ];
+        
+        let logs = [
+            { time: "10:23:45", message: "System monitor started successfully", type: "info" },
+            { time: "10:24:12", message: "CPU usage normal (24.8%)", type: "info" },
+            { time: "10:25:03", message: "Memory pressure detected - clearing cache", type: "warning" },
+            { time: "10:25:15", message: "Automation rule triggered: High memory usage", type: "error" },
+            { time: "10:25:30", message: "Cache cleared - memory usage back to normal", type: "success" },
+            { time: "10:26:45", message: "Network activity spike (124 Mbps)", type: "warning" },
+            { time: "10:27:10", message: "Disk usage at 48.4%", type: "info" },
+            { time: "10:28:05", message: "Python automation layer polling C agent", type: "info" },
+            { time: "10:29:20", message: "Java controller API request from dashboard", type: "info" },
+            { time: "10:30:15", message: "New rule created: 'High CPU Alert'", type: "success" }
+        ];
+        
+        // Chart instances
+        let cpuChart, memoryChart, diskChart, networkChart;
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            initTheme();
+            initCharts();
+            initEventListeners();
+            updateMetricsDisplay();
+            renderRules();
+            renderLogs();
+            updateStats();
+            
+            // Start metric simulation
+            setInterval(simulateMetrics, 2000);
+            setInterval(addLog, 8000);
+        });
+        
+        function initTheme() {
+            const toggle = document.getElementById('themeToggle');
+            const icon = toggle.querySelector('i');
+            
+            // Check for saved theme or prefer dark
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                enableDarkMode();
+            }
+            
+            toggle.addEventListener('click', function() {
+                if (currentTheme === 'light') {
+                    enableDarkMode();
+                } else {
+                    enableLightMode();
+                }
+            });
+        }
+        
+        function enableDarkMode() {
+            document.body.classList.add('dark-mode');
+            document.getElementById('themeToggle').innerHTML = '<i class="fas fa-sun"></i>';
+            currentTheme = 'dark';
+            localStorage.setItem('theme', 'dark');
+            
+            // Update charts for dark mode
+            if (cpuChart) updateChartThemes();
+        }
+        
+        function enableLightMode() {
+            document.body.classList.remove('dark-mode');
+            document.getElementById('themeToggle').innerHTML = '<i class="fas fa-moon"></i>';
+            currentTheme = 'light';
+            localStorage.setItem('theme', 'light');
+            
+            // Update charts for light mode
+            if (cpuChart) updateChartThemes();
+        }
+        
+        function initCharts() {
+            const gridColor = currentTheme === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)';
+            const textColor = currentTheme === 'dark' ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.4)';
+            
+            const options = {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { display: false, grid: { display: false } },
+                    y: { 
+                        display: false, 
+                        grid: { color: gridColor },
+                        min: 0
+                    }
+                },
+                elements: {
+                    point: { radius: 0 },
+                    line: { tension: 0.4 }
+                },
+                interaction: { intersect: false },
+                animation: {
+                    duration: 1000,
+                    easing: 'easeOutQuart'
+                }
+            };
+            
+            // CPU Chart
+            const cpuCtx = document.getElementById('cpuChart').getContext('2d');
+            cpuChart = new Chart(cpuCtx, {
+                type: 'line',
+                data: {
+                    labels: Array.from({length: 20}, (_, i) => i),
+                    datasets: [{
+                        data: generateRandomData(20, 15, 35),
+                        borderColor: colors.blue,
+                        backgroundColor: `rgba(0, 122, 255, ${currentTheme === 'dark' ? '0.1' : '0.05'})`,
+                        fill: true,
+                        borderWidth: 2
+                    }]
+                },
+                options: options
+            });
+            
+            // Memory Chart
+            const memoryCtx = document.getElementById('memoryChart').getContext('2d');
+            memoryChart = new Chart(memoryCtx, {
+                type: 'line',
+                data: {
+                    labels: Array.from({length: 20}, (_, i) => i),
+                    datasets: [{
+                        data: generateRandomData(20, 35, 50),
+                        borderColor: colors.purple,
+                        backgroundColor: `rgba(175, 82, 222, ${currentTheme === 'dark' ? '0.1' : '0.05'})`,
+                        fill: true,
+                        borderWidth: 2
+                    }]
+                },
+                options: options
+            });
+            
+            // Disk Chart
+            const diskCtx = document.getElementById('diskChart').getContext('2d');
+            diskChart = new Chart(diskCtx, {
+                type: 'line',
+                data: {
+                    labels: Array.from({length: 20}, (_, i) => i),
+                    datasets: [{
+                        data: generateRandomData(20, 45, 55),
+                        borderColor: colors.green,
+                        backgroundColor: `rgba(52, 199, 89, ${currentTheme === 'dark' ? '0.1' : '0.05'})`,
+                        fill: true,
+                        borderWidth: 2
+                    }]
+                },
+                options: options
+            });
+            
+            // Network Chart
+            const networkCtx = document.getElementById('networkChart').getContext('2d');
+            networkChart = new Chart(networkCtx, {
+                type: 'line',
+                data: {
+                    labels: Array.from({length: 20}, (_, i) => i),
+                    datasets: [
+                        {
+                            label: 'Download',
+                            data: generateRandomData(20, 60, 140),
+                            borderColor: colors.orange,
+                            backgroundColor: 'transparent',
+                            borderWidth: 2
+                        },
+                        {
+                            label: 'Upload',
+                            data: generateRandomData(20, 20, 60),
+                            borderColor: colors.teal,
+                            backgroundColor: 'transparent',
+                            borderWidth: 2
+                        }
+                    ]
+                },
+                options: {
+                    ...options,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top',
+                            labels: {
+                                color: textColor,
+                                usePointStyle: true,
+                                boxWidth: 6,
+                                padding: 15
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        function updateChartThemes() {
+            const gridColor = currentTheme === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)';
+            const textColor = currentTheme === 'dark' ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.4)';
+            
+            // Update all charts
+            [cpuChart, memoryChart, diskChart, networkChart].forEach(chart => {
+                if (chart) {
+                    chart.options.scales.y.grid.color = gridColor;
+                    if (chart.options.plugins?.legend?.labels) {
+                        chart.options.plugins.legend.labels.color = textColor;
+                    }
+                    chart.update();
+                }
+            });
+        }
+        
+        function generateRandomData(count, min, max) {
+            return Array.from({length: count}, () => 
+                Math.floor(Math.random() * (max - min + 1)) + min
+            );
+        }
+        
+        function initEventListeners() {
+            // Rule modal
+            const modal = document.getElementById('addRuleModal');
+            const addBtn = document.getElementById('addRuleBtn');
+            const cancelBtn = document.getElementById('cancelRuleBtn');
+            const form = document.getElementById('ruleForm');
+            
+            addBtn.addEventListener('click', () => modal.classList.add('active'));
+            cancelBtn.addEventListener('click', () => {
+                modal.classList.remove('active');
+                form.reset();
+            });
+            
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const name = document.getElementById('ruleName').value;
+                const metric = document.getElementById('metricType').value;
+                const condition = document.getElementById('condition').value;
+                const threshold = document.getElementById('thresholdValue').value;
+                const unit = document.getElementById('thresholdUnit').value;
+                const duration = document.getElementById('duration').value;
+                const action = document.getElementById('actionType').value;
+                
+                const newRule = {
+                    id: rules.length + 1,
+                    name: name,
+                    condition: `${metric.toUpperCase()} ${condition === 'greater' ? '>' : condition === 'less' ? '<' : '='} ${threshold}${unit} for ${duration}s`,
+                    action: `${action}`,
+                    status: "active",
+                    triggered: false,
+                    priority: "medium"
+                };
+                
+                rules.push(newRule);
+                renderRules();
+                updateStats();
+                addLog(`Rule created: ${name}`, 'success');
+                
+                modal.classList.remove('active');
+                form.reset();
+            });
+            
+            // Close modal on outside click
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    modal.classList.remove('active');
+                    form.reset();
+                }
+            });
+            
+            // Log buttons
+            document.getElementById('clearLogsBtn').addEventListener('click', function() {
+                logs = [];
+                renderLogs();
+                addLog('Logs cleared', 'warning');
+            });
+            
+            document.getElementById('exportLogsBtn').addEventListener('click', function() {
+                const logText = logs.map(log => `[${log.time}] ${log.message}`).join('\n');
+                const blob = new Blob([logText], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `system-logs-${new Date().toISOString().slice(0,10)}.txt`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                addLog('Logs exported', 'success');
+            });
+        }
+        
+        function simulateMetrics() {
+            // Simulate realistic metric fluctuations
+            metrics.cpu = Math.max(5, Math.min(95, metrics.cpu + (Math.random() * 6 - 3)));
+            metrics.memory.used = Math.max(2.5, Math.min(7.5, metrics.memory.used + (Math.random() * 0.4 - 0.2)));
+            metrics.disk.used = Math.max(245, Math.min(500, metrics.disk.used + (Math.random() * 1 - 0.5)));
+            metrics.network.download = Math.max(30, Math.min(200, metrics.network.download + (Math.random() * 40 - 20)));
+            metrics.network.upload = Math.max(10, Math.min(150, metrics.network.upload + (Math.random() * 20 - 10)));
+            
+            updateMetricsDisplay();
+            updateCharts();
+            
+            // Random rule triggering
+            if (Math.random() > 0.85) {
+                const activeRules = rules.filter(r => r.status === 'active' && !r.triggered);
+                if (activeRules.length > 0) {
+                    const rule = activeRules[Math.floor(Math.random() * activeRules.length)];
+                    rule.triggered = true;
+                    addLog(`Rule triggered: ${rule.name}`, 'error');
+                    renderRules();
+                    updateStats();
+                    
+                    // Reset after delay
+                    setTimeout(() => {
+                        rule.triggered = false;
+                        renderRules();
+                    }, 8000);
+                }
+            }
+            
+            // Update system status
+            updateSystemStatus();
+        }
+        
+        function updateMetricsDisplay() {
+            document.getElementById('cpuValue').textContent = `${metrics.cpu.toFixed(1)}%`;
+            document.getElementById('memoryValue').textContent = `${metrics.memory.used.toFixed(1)}/${metrics.memory.total} GB`;
+            document.getElementById('diskValue').textContent = `${metrics.disk.used}/${metrics.disk.total} GB`;
+            document.getElementById('networkValue').textContent = `${metrics.network.download.toFixed(0)} Mbps`;
+            
+            // Update progress bars
+            document.getElementById('cpuProgress').style.width = `${metrics.cpu}%`;
+            document.getElementById('memoryProgress').style.width = `${(metrics.memory.used / metrics.memory.total) * 100}%`;
+            document.getElementById('diskProgress').style.width = `${(metrics.disk.used / metrics.disk.total) * 100}%`;
+            document.getElementById('networkProgress').style.width = `${Math.min(100, (metrics.network.download / 200) * 100)}%`;
+            
+            // Update trend indicators
+            const cpuTrend = document.querySelector('.metric-trend');
+            cpuTrend.innerHTML = Math.random() > 0.5 ? 
+                `<i class="fas fa-arrow-up"></i><span>${(Math.random() * 3).toFixed(1)}%</span>` :
+                `<i class="fas fa-arrow-down"></i><span>${(Math.random() * 2).toFixed(1)}%</span>`;
+        }
+        
+        function updateCharts() {
+            // Add new data point and remove oldest
+            cpuChart.data.datasets[0].data.push(metrics.cpu + (Math.random() * 10 - 5));
+            cpuChart.data.datasets[0].data.shift();
+            
+            memoryChart.data.datasets[0].data.push((metrics.memory.used / metrics.memory.total) * 100 + (Math.random() * 5 - 2.5));
+            memoryChart.data.datasets[0].data.shift();
+            
+            diskChart.data.datasets[0].data.push((metrics.disk.used / metrics.disk.total) * 100 + (Math.random() * 3 - 1.5));
+            diskChart.data.datasets[0].data.shift();
+            
+            networkChart.data.datasets[0].data.push(metrics.network.download + (Math.random() * 30 - 15));
+            networkChart.data.datasets[0].data.shift();
+            
+            networkChart.data.datasets[1].data.push(metrics.network.upload + (Math.random() * 15 - 7.5));
+            networkChart.data.datasets[1].data.shift();
+            
+            // Update charts
+            cpuChart.update('none');
+            memoryChart.update('none');
+            diskChart.update('none');
+            networkChart.update('none');
+        }
+        
+        function updateSystemStatus() {
+            const statusEl = document.getElementById('systemStatus');
+            const cpuHigh = metrics.cpu > 80;
+            const memHigh = (metrics.memory.used / metrics.memory.total) > 0.85;
+            
+            if (cpuHigh || memHigh) {
+                statusEl.className = 'system-status alert';
+                statusEl.innerHTML = '<div class="status-dot"></div><span>System Stress</span>';
+            } else if (metrics.cpu > 60 || (metrics.memory.used / metrics.memory.total) > 0.7) {
+                statusEl.className = 'system-status warning';
+                statusEl.innerHTML = '<div class="status-dot"></div><span>Moderate Load</span>';
+            } else {
+                statusEl.className = 'system-status';
+                statusEl.innerHTML = '<div class="status-dot"></div><span>All Systems Normal</span>';
+            }
+        }
+        
+        function renderRules() {
+            const container = document.getElementById('rulesList');
+            container.innerHTML = '';
+            
+            const activeRules = rules.filter(r => r.status === 'active');
+            activeRules.forEach(rule => {
+                const div = document.createElement('div');
+                div.className = `rule-item ${rule.triggered ? 'triggered' : 'active'}`;
+                
+                const icon = rule.triggered ? 'fa-bolt' : 
+                           rule.priority === 'critical' ? 'fa-exclamation-triangle' : 
+                           rule.priority === 'high' ? 'fa-arrow-up' : 'fa-cog';
+                
+                div.innerHTML = `
+                    <div class="rule-icon">
+                        <i class="fas ${icon}"></i>
+                    </div>
+                    <div class="rule-content">
+                        <div class="rule-name">${rule.name}</div>
+                        <div class="rule-condition">IF ${rule.condition}</div>
+                        <div class="rule-action">THEN ${rule.action}</div>
+                    </div>
+                    <div class="rule-status ${rule.triggered ? 'status-triggered' : 'status-active'}">
+                        ${rule.triggered ? 'ACTIVE' : 'ACTIVE'}
+                    </div>
+                `;
+                
+                container.appendChild(div);
+            });
+        }
+        
+        function renderLogs() {
+            const container = document.getElementById('logsContainer');
+            container.innerHTML = '';
+            
+            logs.slice().reverse().forEach(log => {
+                const div = document.createElement('div');
+                div.className = `log-item log-${log.type}`;
+                
+                const icon = log.type === 'info' ? 'fa-info-circle' :
+                           log.type === 'warning' ? 'fa-exclamation-triangle' :
+                           log.type === 'error' ? 'fa-times-circle' : 'fa-check-circle';
+                
+                div.innerHTML = `
+                    <div class="log-icon">
+                        <i class="fas ${icon}"></i>
+                    </div>
+                    <div class="log-time mono">${log.time}</div>
+                    <div class="log-message">${log.message}</div>
+                `;
+                
+                container.appendChild(div);
+            });
+        }
+        
+        function addLog(message, type = 'info') {
+            const now = new Date();
+            const timeString = now.toTimeString().split(' ')[0];
+            
+            logs.push({
+                time: timeString,
+                message: message,
+                type: type
+            });
+            
+            // Keep logs manageable
+            if (logs.length > 50) {
+                logs.shift();
+            }
+            
+            renderLogs();
+        }
+        
+        function updateStats() {
+            const totalRules = rules.length;
+            const activeRules = rules.filter(r => r.status === 'active').length;
+            const triggeredToday = rules.filter(r => r.triggered).length;
+            
+            document.getElementById('totalRules').textContent = totalRules;
+            document.getElementById('triggeredToday').textContent = triggeredToday;
+            document.getElementById('actionsExecuted').textContent = Math.floor(Math.random() * 5) + 12;
+        }
+        
+        // Initial render
+        renderRules();
+        renderLogs();
+        updateStats();
+        updateSystemStatus();
+    </script>
+</body>
+</html>
